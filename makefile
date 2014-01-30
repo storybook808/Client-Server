@@ -7,3 +7,5 @@ server:	server.c
 client: client.c
 	cc -o client client.c
 
+branch:	branch.c
+	cc -o branch branch.c
