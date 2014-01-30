@@ -1,0 +1,33 @@
+University of Hawaii
+EE 367L
+Lab 3
+
+Included in this directory are files for Lab 3:
+
+*  Data files:  file1.txt, file2.txt, and file3.txt
+*  Example files:  server.c, client.c, and pipe.c
+
+You will write a server program named "server367.c".
+Each student will have a distinct port number for
+their server.  See the project's Assignment in
+laulima for your port number.  You will also have
+a client program named "client367.c".
+You should have a makefile(s) for your programs
+so that the executable for the server is "server367"
+and the executable for the client is "client367".
+
+Submit your project by having your program files 
+(source code and executables) 
+in this directory.  This directory should also
+have your makefiles, the data files (file1.txt,
+file2.txt, and file3.txt), and a README file,
+which replaces this README file. The new README
+file should include your name, date, an explanation
+of what your programs do, and an explanation
+of how to compile your programs.
+
+Your directory should be tar'd
+and gzipped, and uploaded into laulima.
+
+
+
