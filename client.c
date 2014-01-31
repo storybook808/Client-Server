@@ -28,13 +28,16 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+char getcmd(void);
+
 int main(int argc, char *argv[])
 {
 	int sockfd, numbytes;  
 	char buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	char s[INET6_ADDRSTRLEN];
+	char s[INET6_ADDRSTRLEN], cmd;
+	char *message;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -78,17 +81,37 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-	    perror("recv");
-	    exit(1);
-	}
-
-	buf[numbytes] = '\0';
-
-	printf("client: received '%s'\n",buf);
+	while((cmd = getcmd()) != 'q'){
+		message = &cmd;
+		send(sockfd, message, 1, 0);
+		while(/*server replies*/){}
+	}message = "q";
+	send(sockfd, message, 1, 0);
 
 	close(sockfd);
 
 	return 0;
+}
+
+char getcmd(){
+	char cmd;
+	int valid;
+	do{
+		printf("Enter l(ist) c(heck) d(isplay) D(ownload) h(elp) q(uit): ");
+		cmd = getchar();
+		while(getchar() != '\n'){}
+		switch(cmd){
+			case 'l':
+			case 'c':
+			case 'd':
+			case 'D':
+			case 'h':
+			case 'q': valid = 1;
+				break;
+			default: valid = 0;
+				printf("Your entry '%c' is invalid!\n",cmd);
+		}
+	}while(valid == 0);
+	return(cmd);
 }
 
