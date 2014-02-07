@@ -14,7 +14,7 @@
 
 #include <arpa/inet.h>
 
-#define PORT "3490" // the port client will be connecting to 
+#define PORT "3500" // the port client will be connecting to 
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
 
@@ -84,9 +84,8 @@ int main(int argc, char *argv[])
 	while((cmd = getcmd()) != 'q'){
 		message = &cmd;
 		send(sockfd, message, 1, 0);
-		while(/*server replies*/){}
 	}message = "q";
-	send(sockfd, message, 1, 0);
+	send(sockfd, "q", 1, 0);
 
 	close(sockfd);
 

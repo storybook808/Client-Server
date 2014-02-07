@@ -15,9 +15,11 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT "3490"  // the port users will be connecting to
+#define PORT "3500"  // the port users will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
+
+#define MAXDATASIZE 100
 
 void sigchld_handler(int s)
 {
@@ -44,6 +46,8 @@ int main(void)
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
+	char buf[MAXDATASIZE];
+	int numbytes;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -115,12 +119,14 @@ int main(void)
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
-			while(/*received message != q*/){
-				
+			while(buf[0] != 'q'){
+				while((numbytes = recv(new_fd,buf,MAXDATASIZE-1, 0)) != 1){
+					if(numbytes == -1) exit(1);
+				}buf[numbytes] = '\0';
+				printf("Command was: %c\n", buf[0]);
 			}
-			if (send(new_fd, "Hello, world!", 13, 0) == -1)
-				perror("send");
 			close(new_fd);
+			printf("connection closed\n");
 			exit(0);
 		}
 		close(new_fd);  // parent doesn't need this
