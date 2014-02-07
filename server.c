@@ -47,6 +47,7 @@ int main(void)
 	char s[INET6_ADDRSTRLEN];
 	int rv;
 	char buf[MAXDATASIZE];
+	char cmd;
 	int numbytes;
 
 	memset(&hints, 0, sizeof hints);
@@ -121,12 +122,14 @@ int main(void)
 			close(sockfd); // child doesn't need the listener
 			close(1);
 			dup2(new_fd,1);
-			while(buf[0] != 'q'){
+			do{
 				while((numbytes = recv(new_fd,buf,MAXDATASIZE-1, 0)) != 1){
 					if(numbytes == -1) exit(1);
 				}buf[numbytes] = '\0';
-				printf("Command was: %c\n\0", buf[0]);
-			}
+				cmd = buf[0];
+				printf("Command was: %c\n", cmd);
+				
+			}while(cmd != 'q');
 			close(new_fd);
 			printf("connection closed\n");
 			exit(0);
