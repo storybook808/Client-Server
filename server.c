@@ -119,11 +119,13 @@ int main(void)
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
+			close(1);
+			dup2(new_fd,1);
 			while(buf[0] != 'q'){
 				while((numbytes = recv(new_fd,buf,MAXDATASIZE-1, 0)) != 1){
 					if(numbytes == -1) exit(1);
 				}buf[numbytes] = '\0';
-				printf("Command was: %c\n", buf[0]);
+				printf("Command was: %c\n\0", buf[0]);
 			}
 			close(new_fd);
 			printf("connection closed\n");

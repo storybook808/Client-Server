@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 	int rv;
 	char s[INET6_ADDRSTRLEN], cmd;
 	char *message;
+	int i, newbytes;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -84,6 +85,10 @@ int main(int argc, char *argv[])
 	while((cmd = getcmd()) != 'q'){
 		message = &cmd;
 		send(sockfd, message, 1, 0);
+		while((numbytes = recv(sockfd,buf,MAXDATASIZE-1,0)) == 0){}
+		buf[numbytes] = '\0';
+		for(i=0; buf[i] != '\0'; i++) putchar(buf[i]);
+		//printf("%d\n",newbytes);
 	}message = "q";
 	send(sockfd, "q", 1, 0);
 
