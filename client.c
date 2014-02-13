@@ -14,9 +14,20 @@
 
 #include <arpa/inet.h>
 
-#define PORT "3500" // the port client will be connecting to 
+#define TRUE   1
+#define FALSE  0
+#define ERROR -1
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define PORT "3500" // the port client will be connecting to 
+#define MAXDATASIZE 1000 // max number of bytes we can get at once 
+
+typedef struct{
+	char field[MAXDATASIZE];
+	int numbytes;
+}Message;
+
+void getcmd(Message *cmd, Message *name);
+int validcmd(Message *cmd);
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -28,17 +39,14 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-char getcmd(void);
-
 int main(int argc, char *argv[])
 {
 	int sockfd, numbytes;  
-	char buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	char s[INET6_ADDRSTRLEN], cmd;
-	char *message;
-	int i, newbytes;
+	char s[INET6_ADDRSTRLEN];
+	Message cmd;
+	Message name;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -81,7 +89,12 @@ int main(int argc, char *argv[])
 	printf("client: connecting to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
-
+	
+	do{
+		getcmd(&cmd, &name);
+		send(sockfd, cmd.field, cmd.numbytes, 0);
+	}while(strcmp(cmd.field,"quit"));
+/*
 	while((cmd = getcmd()) != 'q'){
 		message = &cmd;
 		send(sockfd, message, 1, 0);
@@ -91,31 +104,40 @@ int main(int argc, char *argv[])
 		//printf("%d\n",newbytes);
 	}message = "q";
 	send(sockfd, "q", 1, 0);
-
+*/
 	close(sockfd);
 
 	return 0;
 }
 
-char getcmd(){
-	char cmd;
-	int valid;
+void getcmd(Message *cmd, Message *name){
+	int i, j;
 	do{
-		printf("Enter l(ist) c(heck) d(isplay) D(ownload) h(elp) q(uit): ");
-		cmd = getchar();
-		while(getchar() != '\n'){}
-		switch(cmd){
-			case 'l':
-			case 'c':
-			case 'd':
-			case 'D':
-			case 'h':
-			case 'q': valid = 1;
-				break;
-			default: valid = 0;
-				printf("Your entry '%c' is invalid!\n",cmd);
-		}
-	}while(valid == 0);
-	return(cmd);
+		i=0;
+		j=0;
+		printf("client367: ");
+		while((cmd->field[i]=getchar())!='\n'&&cmd->field[i]!=' '){
+			i++;
+		}if(cmd->field[i]==' '){
+			while((name->field[j]=getchar())!='\n'&&name->field[j]!=' '){
+				j++;
+			}
+		}cmd->field[i]='\0';
+		name->field[j]='\0';
+	}while(!validcmd(cmd));
+	cmd->numbytes=i;
+	name->numbytes=j;
+	return;
 }
 
+int validcmd(Message *cmd){
+	int i;
+	i=!strcmp(cmd->field, "list");
+	i=i+!strcmp(cmd->field, "check");
+	i=i+!strcmp(cmd->field, "display");
+	i=i+!strcmp(cmd->field, "download");
+	i=i+!strcmp(cmd->field, "quit");
+	i=i+!strcmp(cmd->field, "help");
+	if(i!=TRUE) printf("Invalid Command\n");
+	return i;
+}
