@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 	char s[INET6_ADDRSTRLEN];
 	Message cmd;
 	Message name;
+	Message input;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -97,10 +98,23 @@ int main(int argc, char *argv[])
 		if(exten(&cmd)){
 			sleep(1);
 			send(sockfd, name.field, name.numbytes, 0);
+		}if(!strcmp(cmd.field, "list")){
+			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
+			input.field[input.numbytes]='\0';
+			printf("%s", input.field);
+		}else if(!strcmp(cmd.field, "check")){
+			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
+			input.field[input.numbytes]='\0';
+			printf("%s", input.field);
+		}else if(!strcmp(cmd.field, "display")){
+ 
+		}else if(!strcmp(cmd.field, "download")){
+		
+		}else if(!strcmp(cmd.field, "help")){
+
 		}
 	}while(strcmp(cmd.field,"quit"));
 	close(sockfd);
-
 	return 0;
 }
 

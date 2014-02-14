@@ -57,6 +57,10 @@ int main(void)
 	int rv;
 	Message cmd;
 	Message name;
+	Message output;
+	int pid;
+	int in[2], out[2];
+	int status, i, event;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -128,16 +132,80 @@ int main(void)
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
-			//close(1);
-			//dup2(new_fd,1);
+			close(1);
+			dup2(new_fd, 1);
 			do{
 				cmd.numbytes=recv(new_fd, cmd.field, MAXDATASIZE-1, 0);
 				cmd.field[cmd.numbytes]='\0';
 				if(exten(&cmd)){
 					name.numbytes=recv(new_fd, name.field, MAXDATASIZE-1, 0);
 					name.field[name.numbytes]='\0';
-				}printf("command was: %s\n", cmd.field);
-				if(exten(&cmd)) printf("parameter was: %s\n", name.field);
+				}if(!strcmp(cmd.field, "list")){
+					pipe(in);
+					pipe(out);
+					pid=fork();
+					if(pid==0){
+						// child process
+						close(0);
+						close(1);
+						close(2);
+						dup2(in[0], 0);
+						dup2(out[1], 1);
+						dup2(out[1], 2);
+						close(in[1]);
+						close(out[0]);
+						execl("/bin/ls", "/bin/ls", (char *)NULL);
+					}else{
+						// parent process
+						close(in[0]);
+						close(out[1]);
+						close(in[1]);
+						wait(&status);
+						output.numbytes=read(out[0], output.field, MAXDATASIZE);
+						output.field[output.numbytes]='\0';
+						printf("%s", output.field);
+					}
+				}else if(!strcmp(cmd.field, "check")){
+					pipe(in);
+					pipe(out);
+					pid=fork();
+					if(pid==0){
+						// child process
+						close(0);
+						close(1);
+						close(2);
+						dup2(in[0], 0);
+						dup2(out[1], 1);
+						dup2(out[1], 2);
+						close(in[1]);
+						close(out[0]);
+						execl("/bin/find", "/bin/find", name.field, (char *)NULL);
+					}else{
+						// parent process
+						close(in[0]);
+						close(out[1]);
+						close(in[1]);
+						wait(&status);
+						output.numbytes=read(out[0], output.field, MAXDATASIZE);
+						output.field[output.numbytes]='\0';
+						event=TRUE;
+						for(i=0; output.field[i]!='\0'; i++){
+							if(output.field[i]==' '){
+								printf("file not found\n");
+								event=FALSE;
+								break;
+							}
+						}if(event){
+							printf("%s found\n", output.field);
+						}
+					}
+				}else if(!strcmp(cmd.field, "display")){
+					printf("function display missing\n");
+				}else if(!strcmp(cmd.field, "download")){
+					printf("function download missing\n");
+				}else if(!strcmp(cmd.field, "help")){
+					printf("function help missing\n");
+				}
 			}while(strcmp(cmd.field, "quit"));
 			close(new_fd);
 			printf("connection closed\n");
