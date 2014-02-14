@@ -15,11 +15,20 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#define TRUE   1
+#define FALSE  0
+#define ERROE -1
+
 #define PORT "3500"  // the port users will be connecting to
-
 #define BACKLOG 10	 // how many pending connections queue will hold
-
 #define MAXDATASIZE 100
+
+typedef struct{
+	char field[MAXDATASIZE];
+	int numbytes;
+}Message;
+
+int exten(Message *cmd);
 
 void sigchld_handler(int s)
 {
@@ -46,9 +55,8 @@ int main(void)
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
-	char buf[MAXDATASIZE];
-	char cmd;
-	int numbytes;
+	Message cmd;
+	Message name;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -123,19 +131,25 @@ int main(void)
 			//close(1);
 			//dup2(new_fd,1);
 			do{
-				numbytes=recv(new_fd, buf, MAXDATASIZE-1, 0);
-				buf[numbytes] = '\0';
-				cmd = buf[0];
-				printf("Command was: %s\n", buf);
-				
-			}while(strcmp(buf, "quit"));
+				cmd.numbytes=recv(new_fd, cmd.field, MAXDATASIZE-1, 0);
+				cmd.field[cmd.numbytes]='\0';
+				if(exten(&cmd)){
+					name.numbytes=recv(new_fd, name.field, MAXDATASIZE-1, 0);
+					name.field[name.numbytes]='\0';
+				}printf("command was: %s\n", cmd.field);
+				if(exten(&cmd)) printf("parameter was: %s\n", name.field);
+			}while(strcmp(cmd.field, "quit"));
 			close(new_fd);
 			printf("connection closed\n");
 			exit(0);
-		}
-		close(new_fd);  // parent doesn't need this
-	}
-
-	return 0;
+		}close(new_fd);  // parent doesn't need this
+	}return 0;
 }
 
+int exten(Message *cmd){
+	int i;
+	i=!strcmp(cmd->field, "check");
+	i=i+!strcmp(cmd->field, "display");
+	i=i+!strcmp(cmd->field, "download");
+	return i;
+}

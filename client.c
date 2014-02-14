@@ -28,6 +28,7 @@ typedef struct{
 
 void getcmd(Message *cmd, Message *name);
 int validcmd(Message *cmd);
+int exten(Message *cmd);
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -93,38 +94,38 @@ int main(int argc, char *argv[])
 	do{
 		getcmd(&cmd, &name);
 		send(sockfd, cmd.field, cmd.numbytes, 0);
+		if(exten(&cmd)){
+			sleep(1);
+			send(sockfd, name.field, name.numbytes, 0);
+		}
 	}while(strcmp(cmd.field,"quit"));
-/*
-	while((cmd = getcmd()) != 'q'){
-		message = &cmd;
-		send(sockfd, message, 1, 0);
-		while((numbytes = recv(sockfd,buf,MAXDATASIZE-1,0)) == 0){}
-		buf[numbytes] = '\0';
-		for(i=0; buf[i] != '\0'; i++) putchar(buf[i]);
-		//printf("%d\n",newbytes);
-	}message = "q";
-	send(sockfd, "q", 1, 0);
-*/
 	close(sockfd);
 
 	return 0;
 }
 
 void getcmd(Message *cmd, Message *name){
-	int i, j;
+	int i, j, event;
 	do{
 		i=0;
 		j=0;
+		event=FALSE;
 		printf("client367: ");
 		while((cmd->field[i]=getchar())!='\n'&&cmd->field[i]!=' '){
 			i++;
 		}if(cmd->field[i]==' '){
 			while((name->field[j]=getchar())!='\n'&&name->field[j]!=' '){
 				j++;
-			}
+			}if(name->field[j]==' ') while(getchar()!='\n'){}
 		}cmd->field[i]='\0';
 		name->field[j]='\0';
-	}while(!validcmd(cmd));
+		if(exten(cmd)){
+			if(j==0){
+				event=TRUE;
+				printf("missing parameter\n");
+			}
+		}
+	}while(!validcmd(cmd)||event);
 	cmd->numbytes=i;
 	name->numbytes=j;
 	return;
@@ -139,5 +140,13 @@ int validcmd(Message *cmd){
 	i=i+!strcmp(cmd->field, "quit");
 	i=i+!strcmp(cmd->field, "help");
 	if(i!=TRUE) printf("Invalid Command\n");
+	return i;
+}
+
+int exten(Message *cmd){
+	int i;
+	i=!strcmp(cmd->field, "check");
+	i=i+!strcmp(cmd->field, "display");
+	i=i+!strcmp(cmd->field, "download");
 	return i;
 }
