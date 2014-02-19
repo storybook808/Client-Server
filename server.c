@@ -21,7 +21,7 @@
 
 #define PORT "3500"  // the port users will be connecting to
 #define BACKLOG 10	 // how many pending connections queue will hold
-#define MAXDATASIZE 100
+#define MAXDATASIZE 1000
 
 typedef struct{
 	char field[MAXDATASIZE];
@@ -60,7 +60,7 @@ int main(void)
 	Message output;
 	int pid;
 	int in[2], out[2];
-	int status, i, event;
+	int status, i, event, total_bytes_read;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -196,11 +196,41 @@ int main(void)
 								break;
 							}
 						}if(event){
-							printf("%s found\n", output.field);
+							for(i=1; output.field[i]!='\0'; i++){
+								putchar(output.field[i-1]);
+							}printf(" found\n", output.field);
 						}
 					}
 				}else if(!strcmp(cmd.field, "display")){
-					printf("function display missing\n");
+					pipe(in);
+					pipe(out);
+					pid=fork();
+					if(pid==0){
+						// child process
+						close(0);
+						close(1);
+						close(2);
+						dup2(in[0], 0);
+						dup2(out[1], 1);
+						dup2(out[1], 2);
+						close(in[1]);
+						close(out[0]);
+						execl("/bin/cat", "/bin/find", name.field, (char *)NULL);
+					}else{
+						// parent process
+						close(in[0]);
+						close(out[1]);
+						close(in[1]);
+						wait(&status);
+						total_bytes_read=0;
+						
+						do{
+						output.numbytes=read(out[0], output.field+total_bytes_read, MAXDATASIZE);
+						if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
+						printf("%s", output.field);
+						total_bytes_read+=output.numbytes;
+						}while(output.numbytes==MAXDATASIZE);
+					}
 				}else if(!strcmp(cmd.field, "download")){
 					printf("function download missing\n");
 				}else if(!strcmp(cmd.field, "help")){
