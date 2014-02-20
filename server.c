@@ -228,7 +228,7 @@ int main(void)
 						output.numbytes=read(out[0], output.field+total_bytes_read, MAXDATASIZE);
 						if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
 						printf("%s", output.field);
-						}while(output.numbytes==MAXDATASIZE);
+						}while(output.numbytes!=0&&output.numbytes!=-1);
 					}
 				}else if(!strcmp(cmd.field, "download")){
 					printf("function download missing\n");

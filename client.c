@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 	Message cmd;
 	Message name;
 	Message input;
+	FILE *fp;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -107,17 +108,22 @@ int main(int argc, char *argv[])
 			input.field[input.numbytes]='\0';
 			printf("%s", input.field);
 		}else if(!strcmp(cmd.field, "display")){
-			do{
-			sleep(1);
-			input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
-			if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
-			printf("%s", input.field);
-			printf("%d\n", input.numbytes);
-			}while(input.numbytes!=0&&input.numbytes!=-1);
+			while(1){
+				sleep(1);
+				input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+				if(input.numbytes==-1||input.numbytes==0) break;
+				if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
+				printf("%s", input.field);
+			}
 		}else if(!strcmp(cmd.field, "download")){
-			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
-			input.field[input.numbytes]='\0';
-			printf("%s", input.field);
+			while(1){
+				sleep(1);
+				input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+				if(input.numbytes==-1||input.numbytes==0) break;
+				if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
+				fp=fopen(name.field,"w");
+				fprintf(fp, input.field);
+			}fclose(fp);
 		}else if(!strcmp(cmd.field, "help")){
 			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1,0);
 			input.field[input.numbytes]='\0';
