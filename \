@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	
 	do{
 		getcmd(&cmd, &name);
-		if(!strcmp(cmd.field, "list")){
+		}if(!strcmp(cmd.field, "list")){
 			send(sockfd, cmd.field, cmd.numbytes, 0);
 			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
 			input.field[input.numbytes]='\0';
@@ -119,26 +119,18 @@ int main(int argc, char *argv[])
 				printf("%s", input.field);
 			}
 		}else if(!strcmp(cmd.field, "download")){
-			send(sockfd, "check", 5, 0);
+			send(sockfd, cmd.field, cmd.numbytes, 0);
 			sleep(1);
 			send(sockfd, name.field, name.numbytes, 0);
-			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
-			input.field[input.numbytes]='\0';
-			if(strcmp(input.field, "file not found\n")){
-			   printf("downloading...\n");
-			   send(sockfd, cmd.field, cmd.numbytes, 0);
-			   sleep(1);
-			   send(sockfd, name.field, name.numbytes, 0);
-			   while(1){
-			      sleep(1);
-			      input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
-			      if(input.numbytes==-1||input.numbytes==0) break;
-			      if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
-			      fp=fopen(name.field,"w");
-			      fprintf(fp, input.field);
-			   }fclose(fp);
-			   printf("done\n");
-			}else printf("%s", input.field);
+			while(1){
+				sleep(1);
+				input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+				if(input.numbytes==-1||input.numbytes==0) break;
+				if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
+				if(!
+				fp=fopen(name.field,"w");
+				fprintf(fp, input.field);
+			}fclose(fp);
 		}else if(!strcmp(cmd.field, "help")){
 			send(sockfd, cmd.field, cmd.numbytes, 0);
 			printf("list: will list the contents of the server onto the terminal\n");

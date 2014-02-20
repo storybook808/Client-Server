@@ -258,7 +258,7 @@ int main(void)
 						}while(output.numbytes!=0&&output.numbytes!=-1);
 					}
 				}else if(!strcmp(cmd.field, "help")){
-					printf("function help missing\n");
+					// shifted to client side
 				}
 			}while(strcmp(cmd.field, "quit"));
 			close(new_fd);
