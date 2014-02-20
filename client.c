@@ -50,6 +50,10 @@ int main(int argc, char *argv[])
 	Message name;
 	Message input;
 	FILE *fp;
+	int pid;
+	char c;
+	int i, event, out[2], status;
+	
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -125,19 +129,48 @@ int main(int argc, char *argv[])
 			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
 			input.field[input.numbytes]='\0';
 			if(strcmp(input.field, "file not found\n")){
-			   printf("downloading...\n");
-			   send(sockfd, cmd.field, cmd.numbytes, 0);
-			   sleep(1);
-			   send(sockfd, name.field, name.numbytes, 0);
-			   while(1){
-			      sleep(1);
-			      input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
-			      if(input.numbytes==-1||input.numbytes==0) break;
-			      if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
-			      fp=fopen(name.field,"w");
-			      fprintf(fp, input.field);
-			   }fclose(fp);
-			   printf("done\n");
+			   pipe(out);
+			   pid=fork();
+			   if(pid==0){
+			      // child process
+			      close(sockfd); // child doesn't need to talk to the server
+                              close(1);
+			      dup2(out[1], 1);
+			      close(out[0]);
+			      execl("/bin/find", "/bin/find", name.field, (char *)NULL);
+			   }else{
+			      close(out[1]);
+			      waitpid(pid, &status, 0);
+			      input.numbytes=read(out[0], input.field, MAXDATASIZE-1);
+			      input.field[input.numbytes]='\0';
+			      event=TRUE;
+			      c='y';
+			      for(i=0; input.field[i]!='\0'; i++){
+			         if(input.field[i]==' '){
+				    event=FALSE;
+				 }
+		              }if(event){
+                                 do{
+				    printf("file already exist, do you want to overwrite? (y/n): ");
+				    c=getchar();
+				 }while(c!='y'&&c!='n');
+				 while(getchar()!='\n');
+			      }if(c=='y'){
+			         printf("downloading...\n");
+			         send(sockfd, cmd.field, cmd.numbytes, 0);
+			         sleep(1);
+			         send(sockfd, name.field, name.numbytes, 0);
+			         while(1){
+			            sleep(1);
+			            input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+			            if(input.numbytes==-1||input.numbytes==0) break;
+			            if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
+			            fp=fopen(name.field,"w");
+			            fprintf(fp, input.field);
+			         }fclose(fp);
+			         printf("done\n");
+		              }else printf("aborted by user\n");
+			   }
 			}else printf("%s", input.field);
 		}else if(!strcmp(cmd.field, "help")){
 			send(sockfd, cmd.field, cmd.numbytes, 0);
