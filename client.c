@@ -108,10 +108,12 @@ int main(int argc, char *argv[])
 			printf("%s", input.field);
 		}else if(!strcmp(cmd.field, "display")){
 			do{
-			input.numbytes=recv(sockfd, input.field, MAXDATASIZE, 0);
+			sleep(1);
+			input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
 			if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
 			printf("%s", input.field);
-			}while(input.numbytes==MAXDATASIZE);
+			printf("%d\n", input.numbytes);
+			}while(input.numbytes!=0&&input.numbytes!=-1);
 		}else if(!strcmp(cmd.field, "download")){
 			input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, 0);
 			input.field[input.numbytes]='\0';

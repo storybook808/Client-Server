@@ -228,7 +228,6 @@ int main(void)
 						output.numbytes=read(out[0], output.field+total_bytes_read, MAXDATASIZE);
 						if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
 						printf("%s", output.field);
-						total_bytes_read+=output.numbytes;
 						}while(output.numbytes==MAXDATASIZE);
 					}
 				}else if(!strcmp(cmd.field, "download")){
