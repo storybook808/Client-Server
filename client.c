@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	FILE *fp;
 	int pid;
 	char c;
-	int i, event, out[2], status;
+	int i, event, in[2],  out[2], status;
 	
 
 	if (argc != 2) {
@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
 			send(sockfd, name.field, name.numbytes, 0);
 			while(1){
 				sleep(1);
-				input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+				input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, MSG_DONTWAIT);
 				if(input.numbytes==-1||input.numbytes==0) break;
-				if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
+				input.field[input.numbytes]='\0';
 				printf("%s", input.field);
 			}
 		}else if(!strcmp(cmd.field, "download")){
@@ -134,14 +134,16 @@ int main(int argc, char *argv[])
 			   if(pid==0){
 			      // child process
 			      close(sockfd); // child doesn't need to talk to the server
-                              close(1);
+			      close(1);
+			      close(2);
 			      dup2(out[1], 1);
+			      dup2(out[1], 2);
 			      close(out[0]);
 			      execl("/bin/find", "/bin/find", name.field, (char *)NULL);
 			   }else{
 			      close(out[1]);
-			      waitpid(pid, &status, 0);
-			      input.numbytes=read(out[0], input.field, MAXDATASIZE-1);
+			      wait(&status);
+			      input.numbytes=read(out[0], input.field, MAXDATASIZE);
 			      input.field[input.numbytes]='\0';
 			      event=TRUE;
 			      c='y';
@@ -156,16 +158,16 @@ int main(int argc, char *argv[])
 				 }while(c!='y'&&c!='n');
 				 while(getchar()!='\n');
 			      }if(c=='y'){
+			         fp=fopen(name.field, "w");
 			         printf("downloading...\n");
 			         send(sockfd, cmd.field, cmd.numbytes, 0);
 			         sleep(1);
 			         send(sockfd, name.field, name.numbytes, 0);
 			         while(1){
 			            sleep(1);
-			            input.numbytes=recv(sockfd, input.field, MAXDATASIZE, MSG_DONTWAIT);
+			            input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, MSG_DONTWAIT);
 			            if(input.numbytes==-1||input.numbytes==0) break;
-			            if(input.numbytes!=MAXDATASIZE) input.field[input.numbytes]='\0';
-			            fp=fopen(name.field,"w");
+			            input.field[input.numbytes]='\0';
 			            fprintf(fp, input.field);
 			         }fclose(fp);
 			         printf("done\n");

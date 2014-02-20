@@ -222,13 +222,11 @@ int main(void)
 						close(out[1]);
 						close(in[1]);
 						wait(&status);
-						total_bytes_read=0;
-						
 						do{
-						output.numbytes=read(out[0], output.field+total_bytes_read, MAXDATASIZE);
-						if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
-						printf("%s", output.field);
-						}while(output.numbytes!=0&&output.numbytes!=-1);
+						   output.numbytes=read(out[0], output.field, MAXDATASIZE-1);
+						   output.field[output.numbytes]='\0';
+						   printf("%s", output.field);
+						   }while(output.numbytes!=0&&output.numbytes!=-1);
 					}
 				}else if(!strcmp(cmd.field, "download")){
 					pipe(in);
@@ -252,8 +250,8 @@ int main(void)
 						close(in[1]);
 						wait(&status);
 						do{
-							output.numbytes=read(out[0], output.field, MAXDATASIZE);
-							if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
+							output.numbytes=read(out[0], output.field, MAXDATASIZE-1);
+							output.field[output.numbytes]='\0';
 							printf("%s", output.field);
 						}while(output.numbytes!=0&&output.numbytes!=-1);
 					}
