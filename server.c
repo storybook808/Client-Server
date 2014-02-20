@@ -215,7 +215,7 @@ int main(void)
 						dup2(out[1], 2);
 						close(in[1]);
 						close(out[0]);
-						execl("/bin/cat", "/bin/find", name.field, (char *)NULL);
+						execl("/bin/cat", "/bin/cat", name.field, (char *)NULL);
 					}else{
 						// parent process
 						close(in[0]);
@@ -231,7 +231,32 @@ int main(void)
 						}while(output.numbytes!=0&&output.numbytes!=-1);
 					}
 				}else if(!strcmp(cmd.field, "download")){
-					printf("function download missing\n");
+					pipe(in);
+					pipe(out);
+					pid=fork();
+					if(pid==0){
+						// child process
+						close(0);
+						close(1);
+						close(2);
+						dup2(in[0], 0);
+						dup2(out[1], 1);
+						dup2(out[1], 2);
+						close(in[1]);
+						close(out[0]);
+						execl("/bin/cat", "/bin/cat", name.field, (char *)NULL);
+					}else{
+						// parent process
+						close(in[0]);
+						close(out[1]);
+						close(in[1]);
+						wait(&status);
+						do{
+							output.numbytes=read(out[0], output.field, MAXDATASIZE);
+							if(output.numbytes!=MAXDATASIZE) output.field[output.numbytes]='\0';
+							printf("%s", output.field);
+						}while(output.numbytes!=0&&output.numbytes!=-1);
+					}
 				}else if(!strcmp(cmd.field, "help")){
 					printf("function help missing\n");
 				}
