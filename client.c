@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
 			sleep(1);
 			send(sockfd, name.field, name.numbytes, 0);
 			while(1){
-				sleep(1);
-				input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, MSG_DONTWAIT);
-				if(input.numbytes==-1||input.numbytes==0) break;
-				input.field[input.numbytes]='\0';
-				printf("%s", input.field);
+			   sleep(1);
+			   input.numbytes=recv(sockfd, input.field, MAXDATASIZE-1, MSG_DONTWAIT);
+			   if(input.numbytes==-1||input.numbytes==0) break;
+			   input.field[input.numbytes]='\0';
+			   printf("%s", input.field);
 			}
 		}else if(!strcmp(cmd.field, "download")){
 			send(sockfd, "check", 5, 0);

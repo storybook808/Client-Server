@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <signal.h>
 
 #define TRUE   1
@@ -61,6 +62,7 @@ int main(void)
 	int pid;
 	int in[2], out[2];
 	int status, i, event, total_bytes_read;
+	struct stat st_buf;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -186,7 +188,7 @@ int main(void)
 						close(out[1]);
 						close(in[1]);
 						wait(&status);
-						output.numbytes=read(out[0], output.field, MAXDATASIZE);
+						output.numbytes=read(out[0], output.field, MAXDATASIZE-1);
 						output.field[output.numbytes]='\0';
 						event=TRUE;
 						for(i=0; output.field[i]!='\0'; i++){
@@ -198,7 +200,7 @@ int main(void)
 						}if(event){
 							for(i=1; output.field[i]!='\0'; i++){
 								putchar(output.field[i-1]);
-							}printf(" found\n", output.field);
+							}printf(" found\n");
 						}
 					}
 				}else if(!strcmp(cmd.field, "display")){
@@ -250,9 +252,9 @@ int main(void)
 						close(in[1]);
 						wait(&status);
 						do{
-							output.numbytes=read(out[0], output.field, MAXDATASIZE-1);
-							output.field[output.numbytes]='\0';
-							printf("%s", output.field);
+						   output.numbytes=read(out[0], output.field, MAXDATASIZE-1);
+						   output.field[output.numbytes]='\0';
+						   printf("%s", output.field);
 						}while(output.numbytes!=0&&output.numbytes!=-1);
 					}
 				}else if(!strcmp(cmd.field, "help")){
